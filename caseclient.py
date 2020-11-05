@@ -18,6 +18,8 @@ if sys.version_info < (3, 0, 0):
 
 
 BASE_URL = 'https://caseregistry.imsglobal.org/ims/case/v1p0'
+BASE_URL = 'https://casenetwork.imsglobal.org/ims/case/v1p0'
+
 
 CREDENTIALS_PATH = os.environ.get('CASE_CREDENTIALS_PATH', 'credentials/casenetwork.json')
 # of the form { "client_id": "<client id>", "client_secret": "<client secret>" }
@@ -76,14 +78,14 @@ class CASEClient(object):
         
         # POST request
         print('POST', CLIENTOKEN_ENDPOINT)
-        response = requests.post(CLIENTOKEN_ENDPOINT, data, headers=headers, verify=False)
+        response = requests.post(CLIENTOKEN_ENDPOINT, data, headers=headers)
         assert response.ok, 'Failed to get access_token.' + str(response.text)
         access_token = response.json()['access_token']
         self.access_token = access_token
 
     def is_authenticated(self):
         url = BEARERCHECK_ENDPOINT + '?token={t}'.format(t=self.access_token)
-        response = requests.get(url, verify=False)
+        response = requests.get(url)
         if response.ok:
             return True
         else:
@@ -106,20 +108,16 @@ class CASEClient(object):
             "Authorization": "Bearer {}".format(self.access_token)
         }
         print('GET', url)
-        response = requests.get(url, headers=headers, verify=False)
+        response = requests.get(url, headers=headers)
         if response.status_code in [401, 403]:
             if not self.is_authenticated():
                 self.obtain_access_token()
                 headers = {
                     "Authorization": "Bearer {}".format(self.access_token)
                 }
-                response = requests.get(url, headers=headers, verify=False)
-        if response.ok:
-            return response.json()
-        else:
-            print('Error ' + str(response.status_code) + ' on GET ' + url)
-            print(response.content)
-            response.raise_for_status()        
+                response = requests.get(url, headers=headers)
+        assert response.ok, 'Error ' + str(response.status_code) + ' on GET ' + url
+        return response.json()
 
 
     def get_documents(self):
