@@ -1,0 +1,8 @@
+# data
+requests==2.24.0
+pandas
+
+# dev
+ipython
+jupyter
+pyflakes
